@@ -100,6 +100,11 @@ const run = async () => {
     core.setOutput("categories", categories);
     core.setOutput("tags", tags);
   } catch (err) {
+    core.debug(err.stack);
+    core.debug(
+      `At ${err.fileName} (line:${err.lineNumber}, col: ${columnNumber})`
+    );
+
     core.setFailed(err);
   }
 };
