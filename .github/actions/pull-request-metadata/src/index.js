@@ -69,7 +69,7 @@ const run = async () => {
       }
       core.debug("marker 3.2");
 
-      const issueRequests = issueURLs.forEach((url) =>
+      const issueRequests = issueURLs.map((url) =>
         octokit.request(`GET ${fromHtmlUrl(url)}`)
       );
       issues = await Promise.all(issueRequests);
