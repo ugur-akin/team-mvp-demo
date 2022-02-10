@@ -1,0 +1,23 @@
+{
+  "name": "pull-request-metadata",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "ncc build src/index.js -o build",
+    "test": "node build/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0",
+    "airtable": "^0.11.1",
+    "jsdom": "^19.0.0",
+    "node-fetch": "^3.1.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.33.1"
+  }
+}

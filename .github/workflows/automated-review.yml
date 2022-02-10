@@ -1,0 +1,63 @@
+name: Review pull request for common problems
+on:
+  pull_request:
+    types: [opened, reopened]
+permissions:
+  pull-requests: write
+env:
+  URL: ${{ github.event.pull_request.url}}
+  OWNER: ${{ github.event.repository.owner.login }}
+  REPOSITORY: ${{ github.event.repository.name }}
+  PULL_NUMBER: ${{ github.event.pull_request.number }}
+  PULL_PAYLOAD: ${{ toJSON(github.event.pull_request)}}
+jobs:
+  collect-pr-info:
+    name: >
+      Collects metadata information about the pull request and compiles 
+      a list of common problems that the pull request should be checked for
+    runs-on: ubuntu-latest
+    outputs:
+      issues: ${{ steps.pull-request-metadata.outputs.issues }}
+      labels: ${{ steps.pull-request-metadata.outputs.labels }}
+      keywords: ${{ steps.pull-request-metadata.outputs.keywords }}
+      categories: ${{ steps.pull-request-metadata.outputs.categories }}
+      tags: ${{ steps.pull-request-metadata.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: pull-request-metadata
+        name: Collect metadata information about the pull request
+        uses: ./.github/actions/pull-request-metadata
+        with:
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+
+  run-automated-reviews:
+    name: >
+      Call automated review workflows based on
+      linked PR issues and labels
+    runs-on: ubuntu-latest
+    needs: collect-pr-info
+    continue-on-error: true
+    strategy:
+      matrix:
+        category: ${{ fromJSON(needs.collect-pr-info.outputs.categories) }}
+      fail-fast: false
+      max-parallel: 10
+    # TODO: Outputs
+    env:
+      CATEGORY: ${{ matrix.category }}
+      RAW_TAGS: ${{ needs.collect-pr-info.outputs.tags }}
+    steps:
+      - id: get-tags
+        run: |
+          echo TAGS=$(echo $RAW_TAGS | jq .$CATEGORY) >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+      - uses: ugur-akin/actions@v0.1.0
+        with:
+          category: ${{ env.CATEGORY }}
+          tags: ${{ env.TAGS }}
+          owner: ${{ env.OWNER }}
+          repository: ${{ env.REPOSITORY }}
+          pull_number: ${{ env.PULL_NUMBER }}
+          pull_payload: ${{ toJSON(github.event.pull_request) }}
+          GITHUB_TOKEN: ${{ github.token }}

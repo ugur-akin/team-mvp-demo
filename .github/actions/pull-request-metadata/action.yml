@@ -1,0 +1,61 @@
+name: Pull Request Metadata Scan
+author: hatchways
+description: |
+  This action scrapes the given pull request page on Github,
+  searches for any linked issues, labels and any labels 
+  associated with the linked issues. Outputs a list of keywords
+  based on scraped information that should be used to determine
+  what review processes should be run for the given pull request.
+inputs:
+  repository:
+    description: "Repository of the pull request"
+    required: true
+  pull_number:
+    description: "Number of the pull request"
+    required: true
+  review_id:
+    description: "Id of the pull review to add comments to"
+    required: true
+  commit_id:
+    description: "Commit id for the pull request review"
+    required: true
+  pull_payload:
+    description: |
+      "The pull object can be passed to avoid redundant requests.
+      Defaults to context.event.pull_request."
+    required: false
+    default: ${{ toJSON(github.event.pull_request) }}
+  GITHUB_TOKEN:
+    description: >
+      "Github token used for authenticating API requests"
+    required: true
+    default: ${{ github.token }}
+  AIRTABLE_API_KEY:
+    description: >
+      "Api key for the airtable account"
+    required: true
+  AIRTABLE_BASE_ID:
+    description: >
+      "Id of the airtable base containing review associations"
+    required: true
+outputs:
+  issues:
+    description: >
+      {Object[]} The list of URLs for the issues that are linked to the pull request
+  labels:
+    description: >
+      The list of lables that are linked to the pull request
+  keywords:
+    description: >
+      The list of keywords hinting at what reviews 
+      should be run for the given pull request
+  categories:
+    description: >
+      The list of categories that is relevant to the pull request
+  tags:
+    description: >
+      The list of tags relevant to the pull request, grouped by category.
+
+runs:
+  using: node16
+  main: build/index.js
