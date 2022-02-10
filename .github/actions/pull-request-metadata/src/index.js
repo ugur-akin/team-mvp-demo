@@ -49,40 +49,50 @@ const run = async () => {
     const auth = core.getInput("GITHUB_TOKEN");
     const octokit = github.getOctokit(auth);
 
+    core.debug("marker 1");
     const html = await fetchPullRequest(prHtmlUrl);
     const { document } = new JSDOM(html).window;
+    core.debug("marker 2");
 
     const issuesForm = document.querySelector(`form[aria-label="Link issues"]`);
+    core.debug("marker 3");
 
     let issues = [];
     if (issuesForm) {
       const anchors = issuesForm.querySelectorAll("a");
       const issueURLs = [];
+      core.debug("marker 3.1");
 
       for (let anchor of anchors) {
         const issueURL = anchor.getAttribute("href");
         issueURLs.push(issueURL);
       }
+      core.debug("marker 3.2");
 
       const issueRequests = issueURLs.forEach((url) =>
         octokit.request(`GET ${fromHtmlUrl(url)}`)
       );
       issues = await Promise.all(issueRequests);
     }
-
+    
+    core.debug("marker 4");
+    
     const issueTitles = issues.map((issue) => issue.title);
     const issueLabels = issues.map((issue) => issue.labels.name);
     const prLabels = prPayload.labels.map((label) => label.name);
 
+    core.debug("marker 5");
     const keywordSet = new Set();
     prLabels.forEach((label) => keywordSet.add(label));
     issueTitles.forEach((title) => keywordSet.add(title));
     issueLabels.forEach((label) => keywordSet.add(label));
+    core.debug("marker 6");
 
     const labelSet = new Set();
     issueLabels.forEach((label) => labelSet.add(label));
     prLabels.forEach((label) => labelSet.add(label));
     additionalLabels.forEach((label) => labelSet.add(label));
+    core.debug("marker 7");
 
     const labels = [...labelSet];
     const keywords = [...keywordSet];
